@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <link rel="stylesheet" href="popup.css" />
+    <script src="popup.js"></script>
+  </head>
+  <body>
+    <main>
+      <section id="chooser">
+        <h3>Which best describes you?</h3>
+        <div class="chooser-button-container">
+          <button id="submitHost">Host</button>
+          <button id="submitGuest">Guest</button>
+        </div>
+      </section>
+      <section id="host" class="hidden">
+        <h3>Step 1: Generate Host Code</h3>
+        <button id="generateOffer">Generate Code</button>
+        <h3>Step 2: Click to Copy Host Code and Send to Guest</h3>
+        <div id="generatedOffer" class="generatedField" readonly>
+          Your Host Code will appear here...
+        </div>
+        <h3>Step 3: Paste and Submit Guest Answer</h3>
+        <textarea id="answerPasteZone"></textarea>
+        <button id="answerSubmit">Submit Answer</button>
+      </section>
+      <section id="guest" class="hidden">
+        <h3>Step 1: Paste and Submit Host Code</h3>
+        <textarea id="offerPasteZone"></textarea>
+        <button id="offerSubmit">Submit Host Code</button>
+        <h3>Step 2: Click to Copy Guest Answer and Send to Host</h3>
+        <div id="generatedAnswer" class="generatedField" readonly>
+          Your Guest Answer will appear here...
+        </div>
+      </section>
+    </main>
+    <h2 id="successBanner" class="hidden">Connected!</h2>
+  </body>
+</html>

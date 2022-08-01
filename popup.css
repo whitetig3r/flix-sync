@@ -1,0 +1,21 @@
+.generatedField {
+  height: 4em;
+  max-width: 90vw;
+  overflow: hidden;
+}
+
+.viewable {
+  visibility: visible;
+}
+
+.hidden {
+  display: none;
+}
+
+.chooser-button-container {
+  display: flex;
+  flex-direction: row;
+  width: 10em;
+  align-items: flex-end;
+  justify-content: space-between;
+}
