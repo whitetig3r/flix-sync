@@ -1,71 +1,24 @@
-function createPeerConnection(lastIceCandidate) {
-  configuration = {
-    iceServers: [
-      {
-        urls: "stun:stun.stunprotocol.org",
-      },
-    ],
-  };
-  try {
-    peerConnection = new RTCPeerConnection(configuration);
-  } catch (err) {
-    console.log("error: " + err);
-  }
-
-  peerConnection.onicecandidate = handleIceCandidate(lastIceCandidate);
-  peerConnection.onconnectionstatechange = handleConnectionStateChange;
-  peerConnection.oniceconnectionstatechange = handleIceConnectionStateChange;
-
-  return peerConnection;
-}
-
-function handleIceCandidate(lastIceCandidate) {
-  return function (event) {
-    if (event.candidate != null) {
-      console.log("INFO: New ICE candidate");
-    } else {
-      console.log("INFO: All ICE candidates");
-      lastIceCandidate();
-    }
-  };
-}
-
-function handleConnectionStateChange(event) {
-  console.log("INFO:" + event);
-}
-
-function handleIceConnectionStateChange(event) {
-  console.log("ICE state:" + event.target.iceConnectionState);
-}
-
-function lastIceCandidateHost() {
-  textelement = document.getElementById("generatedOffer");
-  offer = peerConnection.localDescription;
-  textelement.innerHTML = JSON.stringify(offer);
-}
+// START: CLICK EVENTS
 
 function clickCreateOffer() {
   document.getElementById("generateOffer").disabled = true;
-  peerConnection = createPeerConnection(lastIceCandidateHost);
-  dataChannel = peerConnection.createDataChannel("chat");
-  dataChannel.onopen = dataChannelOpen;
-  dataChannel.onmessage = dataChannelMessage;
-  createOfferPromise = peerConnection.createOffer();
-  createOfferPromise.then(createOfferDone, createOfferFailed);
+  notifyContentTab("createOffer", null, function (response) {
+    if (!response) {
+      console.log("FAILED");
+    }
+  });
 }
 
-function createOfferDone(offer) {
-  console.log("createOfferDone");
-  setLocalPromise = peerConnection.setLocalDescription(offer);
-  setLocalPromise.then(setLocalDone, setLocalFailed);
-}
-
-function createOfferFailed(reason) {
-  console.log("createOfferFailed:" + reason);
-}
-
-function clickOfferSent() {
-  console.log("clickOfferSent");
+function clickOfferPasted() {
+  console.log("clickOfferPasted");
+  textelement = document.getElementById("offerPasteZone");
+  textelement.readOnly = true;
+  offer = JSON.parse(textelement.value);
+  notifyContentTab("generateAnswer", offer, function (response) {
+    if (!response) {
+      console.log("FAILED");
+    }
+  });
 }
 
 function clickAnswerPasted() {
@@ -73,72 +26,11 @@ function clickAnswerPasted() {
   textelement = document.getElementById("answerPasteZone");
   textelement.readOnly = true;
   answer = JSON.parse(textelement.value);
-  setRemotePromise = peerConnection.setRemoteDescription(answer);
-  setRemotePromise.then(setRemoteDoneHost, setRemoteFailedHost);
-}
-
-function setRemoteDoneHost() {
-  console.log("setRemoteDoneHost");
-}
-
-function setRemoteFailedHost(reason) {
-  console.log("setRemoteFailedHost:" + reason);
-}
-
-// ANSWER STUFF
-
-function clickOfferPasted() {
-  console.log("clickOfferPasted");
-  peerConnection = createPeerConnection(lastIceCandidateGuest);
-  peerConnection.ondatachannel = handleDataChannel;
-  textelement = document.getElementById("offerPasteZone");
-  textelement.readOnly = true;
-  offer = JSON.parse(textelement.value);
-  setRemotePromise = peerConnection.setRemoteDescription(offer);
-  setRemotePromise.then(setRemoteDoneGuest, setRemoteFailedGuest);
-}
-
-function setRemoteDoneGuest() {
-  console.log("setRemoteDoneGuest");
-  createAnswerPromise = peerConnection.createAnswer();
-  createAnswerPromise.then(createAnswerDone, createAnswerFailed);
-}
-
-function setRemoteFailedGuest(reason) {
-  console.log("setRemoteFailedGuest");
-  console.log(reason);
-}
-
-function createAnswerDone(answer) {
-  console.log("createAnswerDone");
-  setLocalPromise = peerConnection.setLocalDescription(answer);
-  setLocalPromise.then(setLocalDone, setLocalFailed);
-}
-
-function createAnswerFailed(reason) {
-  console.log("createAnswerFailed:" + reason);
-}
-
-function setLocalDone() {
-  console.log("setLocalDone");
-}
-
-function setLocalFailed(reason) {
-  console.log("setLocalFailed:" + reason);
-}
-
-function lastIceCandidateGuest() {
-  console.log("lastIceCandidateGuest");
-  textelement = document.getElementById("generatedAnswer");
-  answer = peerConnection.localDescription;
-  textelement.innerHTML = JSON.stringify(answer);
-}
-
-function handleDataChannel(event) {
-  console.log("handleDatachannel");
-  dataChannel = event.channel;
-  dataChannel.onopen = dataChannelOpen;
-  dataChannel.onmessage = dataChannelMessage;
+  notifyContentTab("connect", answer, function (response) {
+    if (!response) {
+      console.log("FAILED");
+    }
+  });
 }
 
 function clickSubmitRole(role) {
@@ -201,21 +93,57 @@ function registerHandlers() {
     );
 }
 
-function dataChannelOpen() {
-  console.log("dataChannelOpen");
-  console.log("connected");
+// END: CLICK EVENTS
+
+// START: TAB EVENTS
+function setGeneratedOffer(offer) {
+  textelement = document.getElementById("generatedOffer");
+  textelement.innerHTML = JSON.stringify(offer);
+}
+
+function setGeneratedAnswer(answer) {
+  textelement = document.getElementById("generatedAnswer");
+  textelement.innerHTML = JSON.stringify(answer);
+}
+
+function setConnectionSuccess() {
   successBanner = document.getElementById("successBanner");
   successBanner.classList.remove("hidden");
   successBanner.classList.add("viewable");
-  document.getElementsByTagName("main").classList.add("hidden");
+  document.getElementById("mainSection").classList.add("hidden");
 }
 
-function dataChannelMessage(message) {
-  console.log("dataChannelMessage");
-  console.log(message);
-  text = message.data;
-  console.log(text);
+async function notifyContentTab(message, param) {
+  queryOptions = { active: true, currentWindow: true };
+  let [tab] = await chrome.tabs.query(queryOptions);
+
+  return chrome.tabs.sendMessage(
+    tab.id,
+    { type: message, param: param },
+    (response) => {
+      return response === "OK";
+    }
+  );
 }
+
+// END: TAB EVENTS
+
+chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
+  switch (message.type) {
+    case "setGeneratedOffer":
+      setGeneratedOffer(message.param);
+      sendResponse("OK");
+      break;
+    case "setGeneratedAnswer":
+      setGeneratedAnswer(message.param);
+      sendResponse("OK");
+      break;
+    case "connectionSuccess":
+      setConnectionSuccess();
+      sendResponse("OK");
+      break;
+  }
+});
 
 document.addEventListener("DOMContentLoaded", function () {
   registerHandlers();
