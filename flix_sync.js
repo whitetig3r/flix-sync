@@ -1,15 +1,17 @@
 function createPeerConnection(lastIceCandidate) {
-  configuration = {
+  let peerConnection;
+  const configuration = {
     iceServers: [
       {
         urls: "stun:stun.stunprotocol.org",
       },
     ],
   };
+
   try {
     peerConnection = new RTCPeerConnection(configuration);
   } catch (err) {
-    console.log("error: " + err);
+    flixLog(flixLogLevel.ERROR, "createPeerConnection", err);
   }
 
   peerConnection.onicecandidate = handleIceCandidate(lastIceCandidate);
@@ -22,73 +24,77 @@ function createPeerConnection(lastIceCandidate) {
 function handleIceCandidate(lastIceCandidate) {
   return function (event) {
     if (event.candidate != null) {
-      console.log("INFO: New ICE candidate");
+      flixLog(
+        flixLogLevel.INFO,
+        "handleIceCandidate",
+        "Received new ICE candidate"
+      );
     } else {
-      console.log("INFO: All ICE candidates");
       lastIceCandidate();
     }
   };
 }
 
 function handleConnectionStateChange(event) {
-  console.log("INFO:" + event);
+  flixLog(flixLogLevel.INFO, "handleConnectionStateChange", event);
 }
 
 function handleIceConnectionStateChange(event) {
-  console.log("ICE state:" + event.target.iceConnectionState);
+  flixLog(
+    flixLogLevel.INFO,
+    "handleIceConnectionStateChange",
+    event.target.iceConnectionState
+  );
 }
 
 function lastIceCandidateHost() {
-  console.log("lastIceCandidateHost");
-  offer = peerConnection.localDescription;
-  notifyPopup("setGeneratedOffer", offer, function (response) {
-    return response === "OK";
+  const offer = peerConnection.localDescription;
+  notifyPopup(popupEvents.SET_GENERATED_OFFER, offer, function (response) {
+    return response === universalSuccessCode;
   });
 }
 
 function lastIceCandidateGuest() {
-  console.log("lastIceCandidateGuest");
-  answer = peerConnection.localDescription;
-  notifyPopup("setGeneratedAnswer", answer, function (response) {
-    return response === "OK";
+  const answer = peerConnection.localDescription;
+  notifyPopup(popupEvents.SET_GENERATED_ANSWER, answer, function (response) {
+    return response === universalSuccessCode;
   });
 }
 
 function handleDataChannel(event) {
-  console.log("handleDatachannel");
   dataChannel = event.channel;
   dataChannel.onopen = dataChannelOpen;
   dataChannel.onmessage = dataChannelMessage;
 }
 
 function dataChannelOpen() {
-  console.log("dataChannelOpen");
-  console.log("connected");
-  notifyPopup("connectionSuccess", null, function (response) {
-    return response === "OK";
+  flixLog(flixLogLevel.INFO, "dataChannelOpen", "Data channel is open");
+
+  initiateSyncing();
+
+  notifyPopup("setConnectionSuccess", null, function (response) {
+    return response === universalSuccessCode;
   });
 }
 
 function dataChannelMessage(message) {
-  console.log("dataChannelMessage");
-  console.log(message);
-  text = message.data;
+  const text = message.data;
   console.log(text);
 }
 
 chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
   switch (message.type) {
-    case "createOffer":
+    case contentTabEvents.CREATE_OFFER:
       createOffer();
-      sendResponse("OK");
+      sendResponse(universalSuccessCode);
       break;
-    case "generateAnswer":
+    case contentTabEvents.GENERATE_ANSWER:
       generateAnswer(message.param);
-      sendResponse("OK");
+      sendResponse(universalSuccessCode);
       break;
-    case "connect":
+    case contentTabEvents.ESTABLISH_CONNECTION:
       establishConnection(message.param);
-      sendResponse("OK");
+      sendResponse(universalSuccessCode);
       break;
   }
 });
@@ -97,7 +103,7 @@ function notifyPopup(message, param) {
   return chrome.runtime.sendMessage(
     { type: message, param: param },
     (response) => {
-      return response === "OK";
+      return response === universalSuccessCode;
     }
   );
 }
@@ -106,45 +112,55 @@ function notifyPopup(message, param) {
 
 function createOffer() {
   peerConnection = createPeerConnection(lastIceCandidateHost);
-  dataChannel = peerConnection.createDataChannel("chat");
+
+  dataChannel = peerConnection.createDataChannel(dataChannelId);
   dataChannel.onopen = dataChannelOpen;
   dataChannel.onmessage = dataChannelMessage;
-  createOfferPromise = peerConnection.createOffer();
+
+  const createOfferPromise = peerConnection.createOffer();
   createOfferPromise.then(createOfferDone, createOfferFailed);
 }
 
 function generateAnswer(offer) {
   peerConnection = createPeerConnection(lastIceCandidateGuest);
   peerConnection.ondatachannel = handleDataChannel;
-  setRemotePromise = peerConnection.setRemoteDescription(offer);
+
+  const setRemotePromise = peerConnection.setRemoteDescription(offer);
   setRemotePromise.then(setRemoteDoneGuest, setRemoteFailedGuest);
-  createAnswerPromise = peerConnection.createAnswer();
+
+  const createAnswerPromise = peerConnection.createAnswer();
   createAnswerPromise.then(createAnswerDone, createAnswerFailed);
 }
 
 function establishConnection(answer) {
-  setRemotePromise = peerConnection.setRemoteDescription(answer);
+  const setRemotePromise = peerConnection.setRemoteDescription(answer);
   setRemotePromise.then(setRemoteDoneHost, setRemoteFailedHost);
 }
 
 function createOfferDone(offer) {
-  setLocalPromise = peerConnection.setLocalDescription(offer);
+  const setLocalPromise = peerConnection.setLocalDescription(offer);
   setLocalPromise.then(setLocalDone, setLocalFailed);
-  console.log("createOfferDone");
 }
 
 function createOfferFailed(reason) {
-  console.log("createOfferFailed:" + reason);
+  flixLog(
+    flixLogLevel.ERROR,
+    "createOfferFailed",
+    "Offer failed to be created - " + reason
+  );
 }
 
 function createAnswerDone(answer) {
-  console.log("createAnswerDone");
-  setLocalPromise = peerConnection.setLocalDescription(answer);
+  const setLocalPromise = peerConnection.setLocalDescription(answer);
   setLocalPromise.then(setLocalDone, setLocalFailed);
 }
 
 function createAnswerFailed(reason) {
-  console.log("createAnswerFailed:" + reason);
+  flixLog(
+    flixLogLevel.ERROR,
+    "createAnswerFailed",
+    "Answer failed to be created - " + reason
+  );
 }
 
 // END: MESSAGE ACTIONS
@@ -152,27 +168,43 @@ function createAnswerFailed(reason) {
 // START: STATUS LOGGING
 
 function setLocalDone() {
-  console.log("setLocalDone");
+  flixLog(flixLogLevel.INFO, "setLocalDone", "Local has been set");
 }
 
 function setLocalFailed(reason) {
-  console.log("setLocalFailed:" + reason);
+  flixLog(flixLogLevel.ERROR, "setLocalFailed", "Local set failed - " + reason);
 }
 
 function setRemoteDoneHost() {
-  console.log("setRemoteDoneHost");
+  flixLog(flixLogLevel.INFO, "setRemoteDoneHost", "Remote host has been set");
 }
 
 function setRemoteFailedHost(reason) {
-  console.log("setRemoteFailedHost:" + reason);
+  flixLog(
+    flixLogLevel.ERROR,
+    "setRemoteFailedHost",
+    "Remote host set failed - " + reason
+  );
 }
 
 function setRemoteDoneGuest() {
-  console.log("setRemoteDoneGuest");
+  flixLog(flixLogLevel.INFO, "setRemoteDoneGuest", "Remote guest has been set");
 }
 
 function setRemoteFailedGuest(reason) {
-  console.log("setRemoteFailedGuest:" + reason);
+  flixLog(
+    flixLogLevel.ERROR,
+    "setRemoteFailedGuest",
+    "Remote guest set failed - " + reason
+  );
 }
 
 // END: STATUS LOGGING
+
+// START: CORE SYNCING
+
+function initiateSyncing() {
+  console.log("init sync");
+}
+
+// END: CORE SYNCING

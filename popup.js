@@ -2,33 +2,51 @@
 
 function clickCreateOffer() {
   document.getElementById("generateOffer").disabled = true;
+
   notifyContentTab("createOffer", null, function (response) {
     if (!response) {
-      console.log("FAILED");
+      flixLog(flixLogLevel.ERROR, "clickCreateOffer", "Failed to createOffer");
     }
   });
 }
 
 function clickOfferPasted() {
-  console.log("clickOfferPasted");
-  textelement = document.getElementById("offerPasteZone");
-  textelement.readOnly = true;
-  offer = JSON.parse(textelement.value);
+  flixLog(flixLogLevel.INFO, "clickOfferPasted", "Offer pasted in paste zone");
+  const offerPasteZone = document.getElementById("offerPasteZone");
+
+  offerPasteZone.readOnly = true;
+  const offer = JSON.parse(offerPasteZone.value);
+
   notifyContentTab("generateAnswer", offer, function (response) {
     if (!response) {
-      console.log("FAILED");
+      flixLog(
+        flixLogLevel.ERROR,
+        "clickOfferPasted",
+        "Failed to generateAnswer"
+      );
     }
   });
 }
 
 function clickAnswerPasted() {
-  console.log("clickAnswerPasted");
-  textelement = document.getElementById("answerPasteZone");
-  textelement.readOnly = true;
-  answer = JSON.parse(textelement.value);
-  notifyContentTab("connect", answer, function (response) {
+  flixLog(
+    flixLogLevel.INFO,
+    "clickAnswerPasted",
+    "Answer pasted in paste zone"
+  );
+
+  const answerPasteZone = document.getElementById("answerPasteZone");
+  answerPasteZone.readOnly = true;
+
+  const answer = JSON.parse(answerPasteZone.value);
+
+  notifyContentTab("establishConnection", answer, function (response) {
     if (!response) {
-      console.log("FAILED");
+      flixLog(
+        flixLogLevel.ERROR,
+        "clickAnswerPasted",
+        "Failed to establishConnection"
+      );
     }
   });
 }
@@ -51,77 +69,68 @@ function clickSubmitRole(role) {
 }
 
 function clickCopyToClipBoard(elementId) {
-  navigator.clipboard
-    .writeText(document.getElementById(elementId).innerHTML)
-    .then(
-      function () {
-        console.log("Async: Copying to clipboard was successful!");
-      },
-      function (err) {
-        console.error("Async: Could not copy text: ", err);
-      }
-    );
+  const generatedElement = document.getElementById(elementId);
+
+  navigator.clipboard.writeText(generatedElement.innerHTML).then(
+    function () {
+      console.log("flix-sync: Copying to clipboard was successful!");
+    },
+    function (err) {
+      console.error("flix-sync: Could not copy text: ", err);
+    }
+  );
 }
 
 function registerHandlers() {
-  document
-    .getElementById("submitHost")
-    .addEventListener("click", clickSubmitRole.bind(this, "host"));
-  document
-    .getElementById("submitGuest")
-    .addEventListener("click", clickSubmitRole.bind(this, "guest"));
-  document
-    .getElementById("generateOffer")
-    .addEventListener("click", clickCreateOffer);
-  document
-    .getElementById("answerSubmit")
-    .addEventListener("click", clickAnswerPasted);
-  document
-    .getElementById("offerSubmit")
-    .addEventListener("click", clickOfferPasted);
-  document
-    .getElementById("generatedOffer")
-    .addEventListener(
-      "click",
-      clickCopyToClipBoard.bind(this, "generatedOffer")
-    );
-  document
-    .getElementById("generatedAnswer")
-    .addEventListener(
-      "click",
-      clickCopyToClipBoard.bind(this, "generatedAnswer")
-    );
+  bindClickEvent("submitHost", clickSubmitRole.bind(this, "host"));
+  bindClickEvent("submitGuest", clickSubmitRole.bind(this, "guest"));
+  bindClickEvent("generateOffer", clickCreateOffer);
+  bindClickEvent("answerSubmit", clickAnswerPasted);
+  bindClickEvent("offerSubmit", clickOfferPasted);
+  bindClickEvent(
+    "generatedOffer",
+    clickCopyToClipBoard.bind(this, "generatedOffer")
+  );
+  bindClickEvent(
+    "generatedAnswer",
+    clickCopyToClipBoard.bind(this, "generatedAnswer")
+  );
+}
+
+function bindClickEvent(elementId, eventHandler) {
+  document.getElementById(elementId).addEventListener("click", eventHandler);
 }
 
 // END: CLICK EVENTS
 
 // START: TAB EVENTS
+
 function setGeneratedOffer(offer) {
-  textelement = document.getElementById("generatedOffer");
-  textelement.innerHTML = JSON.stringify(offer);
+  const generatedOfferElement = document.getElementById("generatedOffer");
+  generatedOfferElement.innerHTML = JSON.stringify(offer);
 }
 
 function setGeneratedAnswer(answer) {
-  textelement = document.getElementById("generatedAnswer");
-  textelement.innerHTML = JSON.stringify(answer);
+  const generatedAnswerElement = document.getElementById("generatedAnswer");
+  generatedAnswerElement.innerHTML = JSON.stringify(answer);
 }
 
 function setConnectionSuccess() {
-  successBanner = document.getElementById("successBanner");
+  const successBanner = document.getElementById("successBanner");
   successBanner.classList.remove("hidden");
   successBanner.classList.add("viewable");
   document.getElementById("mainSection").classList.add("hidden");
 }
 
 async function notifyContentTab(message, param) {
-  queryOptions = { active: true, currentWindow: true };
+  const queryOptions = { active: true, currentWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
 
   return chrome.tabs.sendMessage(
     tab.id,
     { type: message, param: param },
     (response) => {
-      return response === "OK";
+      return response === universalSuccessCode;
     }
   );
 }
@@ -130,17 +139,17 @@ async function notifyContentTab(message, param) {
 
 chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
   switch (message.type) {
-    case "setGeneratedOffer":
+    case popupEvents.SET_GENERATED_OFFER:
       setGeneratedOffer(message.param);
-      sendResponse("OK");
+      sendResponse(universalSuccessCode);
       break;
-    case "setGeneratedAnswer":
+    case popupEvents.SET_GENERATED_ANSWER:
       setGeneratedAnswer(message.param);
-      sendResponse("OK");
+      sendResponse(universalSuccessCode);
       break;
-    case "connectionSuccess":
+    case popupEvents.SET_CONNECTION_CONNECTION_SUCCESS:
       setConnectionSuccess();
-      sendResponse("OK");
+      sendResponse(universalSuccessCode);
       break;
   }
 });
