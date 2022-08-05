@@ -1,10 +1,20 @@
 const dataChannelId = "syncChannel";
 const universalSuccessCode = "OK";
+const syncInterval = 5000;
 
 const flixLogLevel = Object.freeze({
   INFO: 0,
   WARN: 1,
   ERROR: 2,
+});
+
+const roles = Object.freeze({
+  HOST: "host",
+  GUEST: "guest",
+});
+
+const messageTypes = Object.freeze({
+  SYNC: "sync",
 });
 
 const contentTabEvents = Object.freeze({

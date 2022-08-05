@@ -35,8 +35,43 @@ function handleIceCandidate(lastIceCandidate) {
   };
 }
 
-function handleConnectionStateChange(event) {
-  flixLog(flixLogLevel.INFO, "handleConnectionStateChange", event);
+function handleConnectionStateChange(_event) {
+  switch (peerConnection.connectionState) {
+    case "new":
+    case "checking":
+      flixLog(
+        flixLogLevel.INFO,
+        "handleConnectionStateChange",
+        peerConnection.state
+      );
+      break;
+
+    case "closed":
+    case "connected":
+      flixLog(
+        flixLogLevel.WARN,
+        "handleConnectionStateChange",
+        peerConnection.state
+      );
+      break;
+
+    case "disconnected":
+    case "failed":
+      flixLog(
+        flixLogLevel.ERROR,
+        "handleConnectionStateChange",
+        peerConnection.state
+      );
+      break;
+
+    default:
+      flixLog(
+        flixLogLevel.INFO,
+        "handleConnectionStateChange",
+        "unknown state"
+      );
+      break;
+  }
 }
 
 function handleIceConnectionStateChange(event) {
@@ -78,8 +113,13 @@ function dataChannelOpen() {
 }
 
 function dataChannelMessage(message) {
-  const text = message.data;
-  console.log(text);
+  switch (message.type) {
+    case messageTypes.SYNC:
+      calibratePlayHeader(message.data);
+      break;
+    case messageTypes.PAUSE:
+      pausePlayer();
+  }
 }
 
 chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
@@ -111,6 +151,8 @@ function notifyPopup(message, param) {
 // START: MESSAGE ACTIONS
 
 function createOffer() {
+  role = roles.HOST;
+
   peerConnection = createPeerConnection(lastIceCandidateHost);
 
   dataChannel = peerConnection.createDataChannel(dataChannelId);
@@ -122,6 +164,8 @@ function createOffer() {
 }
 
 function generateAnswer(offer) {
+  role = roles.GUEST;
+
   peerConnection = createPeerConnection(lastIceCandidateGuest);
   peerConnection.ondatachannel = handleDataChannel;
 
@@ -204,7 +248,52 @@ function setRemoteFailedGuest(reason) {
 // START: CORE SYNCING
 
 function initiateSyncing() {
-  console.log("init sync");
+  switch (role) {
+    case roles.HOST:
+      sendSyncMessagesToGuest();
+      break;
+    case roles.GUEST:
+      // nothing yet
+      break;
+  }
+}
+
+function netflixPlayer() {
+  videoPlayer = netflix.appContext.state.playerApp.getApi().videoPlayer;
+  sessionId = videoPlayer.getAllPlayerSessionIds()[0];
+
+  return videoPlayer.getVideoPlayerBySessionId(playerSessionId);
+}
+
+function pausePlayer() {
+  const player = netflixPlayer();
+  player.pause();
+}
+
+function sendSyncMessagesToGuest() {
+  setInterval(function () {
+    const player = netflixPlayer();
+    if (videoPlayer.isVideoPlayingForSessionId(sessionId)) {
+      const currentPlayerTime = player.getCurrentTime();
+      sendOnDataChannel({
+        type: messageTypes.SYNC,
+        data: { time: currentPlayerTime },
+      });
+    } else {
+      sendOnDataChannel({ type: messageTypes.PAUSE, data: {} });
+    }
+  }, syncInterval);
+}
+
+function sendOnDataChannel(payload) {
+  dataChannel.send(JSON.stringify(payload));
+}
+
+function calibratePlayHeader(payload) {
+  const player = netflixPlayer();
+  if (Math.abs(player.getCurrentTime() - payload.data.time) > maxDelta) {
+    player.seek(payload.data.time);
+  }
 }
 
 // END: CORE SYNCING
