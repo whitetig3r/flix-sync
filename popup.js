@@ -57,7 +57,7 @@ function clickSubmitRole(role) {
   chooserSection.classList.remove("chooser");
   chooserSection.classList.add("hidden");
 
-  if (role === "host") {
+  if (role === roles.HOST) {
     const hostSection = document.getElementById("host");
     hostSection.classList.remove("hidden");
     hostSection.classList.add("viewable");
@@ -73,10 +73,14 @@ function clickCopyToClipBoard(elementId) {
 
   navigator.clipboard.writeText(generatedElement.innerHTML).then(
     function () {
-      console.log("flix-sync: Copying to clipboard was successful!");
+      generatedElement.innerHTML = "Copying to clipboard was successful!";
     },
     function (err) {
-      console.error("flix-sync: Could not copy text: ", err);
+      flixLog(
+        flixLoglevels.ERROR,
+        "clickCopyToClipBoard",
+        "Could not copy text -" + err
+      );
     }
   );
 }
