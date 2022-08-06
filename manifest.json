@@ -8,12 +8,18 @@
   "content_scripts": [
     {
       "matches": ["http://*.netflix.com/*", "https://*.netflix.com/*"],
-      "js": ["flix_utilities.js", "flix_sync.js"]
+      "js": ["inject.js", "flix_utilities.js", "flix_sync.js"]
     }
   ],
   "background": {
     "service_worker": "background.js"
   },
+  "web_accessible_resources": [
+    {
+      "resources": ["flix_sync_injected.js"],
+      "matches": ["http://*.netflix.com/*", "https://*.netflix.com/*"]
+    }
+  ],
   "manifest_version": 3,
   "permissions": ["declarativeContent", "tabs"]
 }

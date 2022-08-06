@@ -1,6 +1,8 @@
 const dataChannelId = "syncChannel";
 const universalSuccessCode = "OK";
-const syncInterval = 5000;
+
+const dispatchedEventName = "oninjectormessage";
+const receivedEventName = "oninjectedmessage";
 
 const flixLogLevel = Object.freeze({
   INFO: 0,
@@ -13,7 +15,7 @@ const roles = Object.freeze({
   GUEST: "guest",
 });
 
-const messageTypes = Object.freeze({
+const dataChannelMessageTypes = Object.freeze({
   SYNC: "sync",
 });
 
@@ -28,6 +30,16 @@ const popupEvents = Object.freeze({
   SET_GENERATED_ANSWER: "setGeneratedAnswer",
   SET_CONNECTION_CONNECTION_SUCCESS: "setConnectionSuccess",
   SET_CONNECTION_CONNECTION_FAILURE: "setConnectionFailure",
+});
+
+const receivedMessageTypes = Object.freeze({
+  CURRENT_TIME: "currentTime",
+  PAUSE: "pause",
+});
+
+const dispatchedMessageTypes = Object.freeze({
+  CALLIBRATE: "calibrate",
+  PAUSE: "pause",
 });
 
 function flixLog(level, tag, message) {

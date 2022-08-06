@@ -105,8 +105,6 @@ function handleDataChannel(event) {
 function dataChannelOpen() {
   flixLog(flixLogLevel.INFO, "dataChannelOpen", "Data channel is open");
 
-  initiateSyncing();
-
   notifyPopup("setConnectionSuccess", null, function (response) {
     return response === universalSuccessCode;
   });
@@ -114,11 +112,12 @@ function dataChannelOpen() {
 
 function dataChannelMessage(message) {
   switch (message.type) {
-    case messageTypes.SYNC:
-      calibratePlayHeader(message.data);
+    case dataChannelMessageTypes.SYNC:
+      dispatchCalibrateEvent(message);
       break;
-    case messageTypes.PAUSE:
-      pausePlayer();
+    case dataChannelMessageTypes.PAUSE:
+      dispatchPauseEvent(message);
+      break;
   }
 }
 
@@ -247,53 +246,54 @@ function setRemoteFailedGuest(reason) {
 
 // START: CORE SYNCING
 
-function initiateSyncing() {
-  switch (role) {
-    case roles.HOST:
-      sendSyncMessagesToGuest();
-      break;
-    case roles.GUEST:
-      // nothing yet
-      break;
-  }
-}
-
-function netflixPlayer() {
-  videoPlayer = netflix.appContext.state.playerApp.getApi().videoPlayer;
-  sessionId = videoPlayer.getAllPlayerSessionIds()[0];
-
-  return videoPlayer.getVideoPlayerBySessionId(playerSessionId);
-}
-
-function pausePlayer() {
-  const player = netflixPlayer();
-  player.pause();
-}
-
-function sendSyncMessagesToGuest() {
-  setInterval(function () {
-    const player = netflixPlayer();
-    if (videoPlayer.isVideoPlayingForSessionId(sessionId)) {
-      const currentPlayerTime = player.getCurrentTime();
-      sendOnDataChannel({
-        type: messageTypes.SYNC,
-        data: { time: currentPlayerTime },
-      });
-    } else {
-      sendOnDataChannel({ type: messageTypes.PAUSE, data: {} });
-    }
-  }, syncInterval);
-}
-
 function sendOnDataChannel(payload) {
   dataChannel.send(JSON.stringify(payload));
 }
 
-function calibratePlayHeader(payload) {
-  const player = netflixPlayer();
-  if (Math.abs(player.getCurrentTime() - payload.data.time) > maxDelta) {
-    player.seek(payload.data.time);
-  }
+function dispatchEvent(payloadData) {
+  document.dispatchEvent(
+    new CustomEvent(dispatchedEventName, {
+      detail: payloadData,
+    })
+  );
 }
+
+function dispatchCalibrateEvent(payload) {
+  document.dispatchEvent({
+    type: dispatchedMessageTypes.CALIBRATE,
+    data: { currentPlayerTime: payload },
+  });
+}
+
+function dispatchPauseEvent(_payload) {
+  document.dispatchEvent({
+    type: dispatchedMessageTypes.PAUSE,
+    data: {},
+  });
+}
+
+document.addEventListener(receivedEventName, function (e) {
+  switch (e.detail.type) {
+    case receivedMessageTypes.CURRENT_TIME:
+      if (
+        peerConnection.connectionState == "connected" &&
+        dataChannel &&
+        role == roles.HOST
+      ) {
+        const currentPlayerHead = e.detail.data.currentPlayerTime;
+        sendOnDataChannel({
+          type: dataChannelMessageTypes.SYNC,
+          data: { currentPlayerTime: currentPlayerHead },
+        });
+      }
+      break;
+    case receivedMessageTypes.PAUSE:
+      sendOnDataChannel({
+        type: dataChannelMessageTypes.PAUSE,
+        data: {},
+      });
+      break;
+  }
+});
 
 // END: CORE SYNCING
