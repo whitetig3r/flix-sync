@@ -111,6 +111,7 @@ function dataChannelOpen() {
 }
 
 function dataChannelMessage(message) {
+  console.log(message);
   switch (message.type) {
     case dataChannelMessageTypes.SYNC:
       dispatchCalibrateEvent(message);
@@ -273,26 +274,24 @@ function dispatchPauseEvent(_payload) {
 }
 
 document.addEventListener(receivedEventName, function (e) {
-  switch (e.detail.type) {
-    case receivedMessageTypes.CURRENT_TIME:
-      if (
-        peerConnection.connectionState == "connected" &&
-        dataChannel &&
-        role == roles.HOST
-      ) {
-        const currentPlayerHead = e.detail.data.currentPlayerTime;
+  if (peerConnection.connectionState === "connected" && dataChannel) {
+    switch (e.detail.type) {
+      case receivedMessageTypes.CURRENT_TIME:
+        if (role === roles.HOST) {
+          const currentPlayerHead = e.detail.data.currentPlayerTime;
+          sendOnDataChannel({
+            type: dataChannelMessageTypes.SYNC,
+            data: { currentPlayerTime: currentPlayerHead },
+          });
+        }
+        break;
+      case receivedMessageTypes.PAUSE:
         sendOnDataChannel({
-          type: dataChannelMessageTypes.SYNC,
-          data: { currentPlayerTime: currentPlayerHead },
+          type: dataChannelMessageTypes.PAUSE,
+          data: {},
         });
-      }
-      break;
-    case receivedMessageTypes.PAUSE:
-      sendOnDataChannel({
-        type: dataChannelMessageTypes.PAUSE,
-        data: {},
-      });
-      break;
+        break;
+    }
   }
 });
 

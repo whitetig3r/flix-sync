@@ -23,12 +23,14 @@ function netflixPlayer() {
 
 function pausePlayer() {
   const player = netflixPlayer();
+  console.log("Trying to seek!");
   player.pause();
 }
 
 function calibratePlayHeader(data) {
   const player = netflixPlayer();
   if (Math.abs(player.getCurrentTime() - data.currentPlayerTime) > maxDelta) {
+    console.log("Trying to seek!");
     player.seek(data.currentPlayerTime);
   }
 }
@@ -42,6 +44,7 @@ function dispatchEvent(payloadData) {
 }
 
 document.addEventListener(receivedEventName, function (e) {
+  console.log(e.detail);
   switch (e.detail.type) {
     case receivedMessageTypes.CALLIBRATE:
       calibratePlayHeader(e.detail.data);

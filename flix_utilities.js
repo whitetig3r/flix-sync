@@ -17,6 +17,7 @@ const roles = Object.freeze({
 
 const dataChannelMessageTypes = Object.freeze({
   SYNC: "sync",
+  PAUSE: "pause",
 });
 
 const contentTabEvents = Object.freeze({
