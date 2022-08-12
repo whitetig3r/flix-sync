@@ -252,29 +252,32 @@ function sendOnDataChannel(payload) {
 }
 
 function dispatchEvent(payloadData) {
-  document.dispatchEvent(
-    new CustomEvent(dispatchedEventName, {
-      detail: payloadData,
-    })
-  );
+  window.postMessage({
+    ...payloadData,
+    source: "flix-sync-content",
+  });
 }
 
 function dispatchCalibrateEvent(payload) {
-  document.dispatchEvent({
+  dispatchEvent({
     type: dispatchedMessageTypes.CALIBRATE,
     data: { currentPlayerTime: payload },
   });
 }
 
 function dispatchPauseEvent(_payload) {
-  document.dispatchEvent({
+  dispatchEvent({
     type: dispatchedMessageTypes.PAUSE,
     data: {},
   });
 }
 
 document.addEventListener(receivedEventName, function (e) {
-  if (peerConnection.connectionState === "connected" && dataChannel) {
+  if (
+    peerConnection &&
+    peerConnection.connectionState === "connected" &&
+    dataChannel
+  ) {
     switch (e.detail.type) {
       case receivedMessageTypes.CURRENT_TIME:
         if (role === roles.HOST) {
