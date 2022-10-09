@@ -41,7 +41,7 @@ const receivedDocumentEventMessageTypes = Object.freeze({
 });
 
 const dispatchedWindowEventMessageTypes = Object.freeze({
-  CALLIBRATE: "calibrate",
+  CALIBRATE: "calibrate",
   PAUSE: "pause",
 });
 
