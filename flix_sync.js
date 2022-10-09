@@ -112,7 +112,8 @@ function dataChannelOpen() {
 
 function dataChannelMessage(message) {
   console.log(message);
-  switch (message.type) {
+  const messageJson = JSON.parse(message);
+  switch (messageJson.type) {
     case dataChannelMessageTypes.SYNC:
       dispatchCalibrateEvent(message);
       break;
