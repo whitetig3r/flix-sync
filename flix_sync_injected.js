@@ -5,7 +5,7 @@ const receivedEventName = "oninjectormessage";
 const dispatchedEventName = "oninjectedmessage";
 
 const receivedMessageTypes = Object.freeze({
-  CALLIBRATE: "calibrate",
+  CALIBRATE: "calibrate",
   PAUSE: "pause",
 });
 
@@ -44,7 +44,7 @@ function dispatchEvent(payloadData) {
 window.addEventListener("message", function (e) {
   const message = e.data;
   switch (message.type) {
-    case receivedMessageTypes.CALLIBRATE:
+    case receivedMessageTypes.CALIBRATE:
       calibratePlayHeader(message);
       break;
     case receivedMessageTypes.PAUSE:
