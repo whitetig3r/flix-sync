@@ -252,10 +252,13 @@ function sendOnDataChannel(payload) {
 }
 
 function dispatchEvent(payloadData) {
-  window.postMessage({
-    ...payloadData,
-    source: "flix-sync-content",
-  });
+  window.postMessage(
+    {
+      ...payloadData,
+      source: "flix-sync-content",
+    },
+    targetOrigin
+  );
 }
 
 function dispatchCalibrateEvent(payload) {

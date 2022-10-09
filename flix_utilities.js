@@ -4,6 +4,8 @@ const universalSuccessCode = "OK";
 const dispatchedEventName = "oninjectormessage";
 const receivedEventName = "oninjectedmessage";
 
+const targetOrigin = "https://www.netflix.com";
+
 const flixLogLevel = Object.freeze({
   INFO: 0,
   WARN: 1,
