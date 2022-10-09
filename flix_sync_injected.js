@@ -1,5 +1,5 @@
 const maxDelta = 5000;
-const eventDispatchInterval = 3000;
+const eventDispatchInterval = 1000;
 
 const receivedEventName = "oninjectormessage";
 const dispatchedEventName = "oninjectedmessage";
@@ -30,6 +30,7 @@ function calibratePlayHeader(data) {
   const player = netflixPlayer();
   if (Math.abs(player.getCurrentTime() - data.currentPlayerTime) > maxDelta) {
     player.seek(data.currentPlayerTime);
+    player.play();
   }
 }
 
