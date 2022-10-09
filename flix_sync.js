@@ -1,3 +1,8 @@
+// The peerConnection to be used
+var peerConnection;
+// The dataChannel to be used
+var dataChannel;
+
 function createPeerConnection(lastIceCandidate) {
   let peerConnection;
   const configuration = {
@@ -282,15 +287,17 @@ document.addEventListener(receivedEventName, function (e) {
     peerConnection.connectionState === "connected" &&
     dataChannel
   ) {
+    if (role !== roles.HOST) {
+      return;
+    }
+
     switch (e.detail.type) {
       case receivedMessageTypes.CURRENT_TIME:
-        if (role === roles.HOST) {
-          const currentPlayerHead = e.detail.data.currentPlayerTime;
-          sendOnDataChannel({
-            type: dataChannelMessageTypes.SYNC,
-            data: { currentPlayerTime: currentPlayerHead },
-          });
-        }
+        const currentPlayerHead = e.detail.data.currentPlayerTime;
+        sendOnDataChannel({
+          type: dataChannelMessageTypes.SYNC,
+          data: { currentPlayerTime: currentPlayerHead },
+        });
         break;
       case receivedMessageTypes.PAUSE:
         sendOnDataChannel({
