@@ -270,7 +270,7 @@ function dispatchEvent(payloadData) {
 function dispatchCalibrateEvent(payload) {
   dispatchEvent({
     type: dispatchedWindowEventMessageTypes.CALIBRATE,
-    data: { currentPlayerTime: payload.currentPlayerTime },
+    data: { currentPlayerTime: payload.data.currentPlayerTime },
   });
 }
 
