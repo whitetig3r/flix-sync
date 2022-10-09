@@ -116,7 +116,6 @@ function dataChannelOpen() {
 }
 
 function dataChannelMessage(message) {
-  console.log(message);
   const messageData = JSON.parse(message.data);
   switch (messageData.type) {
     case dataChannelMessageTypes.SYNC:
