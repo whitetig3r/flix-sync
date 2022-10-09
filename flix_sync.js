@@ -269,14 +269,14 @@ function dispatchEvent(payloadData) {
 
 function dispatchCalibrateEvent(payload) {
   dispatchEvent({
-    type: dispatchedMessageTypes.CALIBRATE,
+    type: dispatchedWindowEventMessageTypes.CALIBRATE,
     data: { currentPlayerTime: payload },
   });
 }
 
 function dispatchPauseEvent(_payload) {
   dispatchEvent({
-    type: dispatchedMessageTypes.PAUSE,
+    type: dispatchedWindowEventMessageTypes.PAUSE,
     data: {},
   });
 }
@@ -292,14 +292,14 @@ document.addEventListener(receivedEventName, function (e) {
     }
 
     switch (e.detail.type) {
-      case receivedMessageTypes.CURRENT_TIME:
+      case receivedDocumentEventMessageTypes.CURRENT_TIME:
         const currentPlayerHead = e.detail.data.currentPlayerTime;
         sendOnDataChannel({
           type: dataChannelMessageTypes.SYNC,
           data: { currentPlayerTime: currentPlayerHead },
         });
         break;
-      case receivedMessageTypes.PAUSE:
+      case receivedDocumentEventMessageTypes.PAUSE:
         sendOnDataChannel({
           type: dataChannelMessageTypes.PAUSE,
           data: {},

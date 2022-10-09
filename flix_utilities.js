@@ -35,12 +35,12 @@ const popupEvents = Object.freeze({
   SET_CONNECTION_CONNECTION_FAILURE: "setConnectionFailure",
 });
 
-const receivedMessageTypes = Object.freeze({
+const receivedDocumentEventMessageTypes = Object.freeze({
   CURRENT_TIME: "currentTime",
   PAUSE: "pause",
 });
 
-const dispatchedMessageTypes = Object.freeze({
+const dispatchedWindowEventMessageTypes = Object.freeze({
   CALLIBRATE: "calibrate",
   PAUSE: "pause",
 });
