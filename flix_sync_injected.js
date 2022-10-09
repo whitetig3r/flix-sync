@@ -45,7 +45,7 @@ window.addEventListener("message", function (e) {
   const message = e.data;
   switch (message.type) {
     case receivedMessageTypes.CALLIBRATE:
-      calibratePlayHeader(message.data);
+      calibratePlayHeader(message);
       break;
     case receivedMessageTypes.PAUSE:
       pausePlayer();

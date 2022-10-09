@@ -117,13 +117,13 @@ function dataChannelOpen() {
 
 function dataChannelMessage(message) {
   console.log(message);
-  const messageJson = JSON.parse(message.data);
-  switch (messageJson.type) {
+  const messageData = JSON.parse(message.data);
+  switch (messageData.type) {
     case dataChannelMessageTypes.SYNC:
-      dispatchCalibrateEvent(message);
+      dispatchCalibrateEvent(messageData);
       break;
     case dataChannelMessageTypes.PAUSE:
-      dispatchPauseEvent(message);
+      dispatchPauseEvent(messageData);
       break;
   }
 }
