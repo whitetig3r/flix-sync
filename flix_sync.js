@@ -276,7 +276,7 @@ function dispatchPauseEvent(_payload) {
 document.addEventListener(receivedEventName, function (event) {
   if (
     peerConnection &&
-    peerConnection.connectionState === "connected" &&
+    peerConnection.connectionState === peerConnectionStates.CONNECTED &&
     dataChannel
   ) {
     if (role !== roles.HOST) {
