@@ -6,6 +6,14 @@ const receivedEventName = "oninjectedmessage";
 
 const targetOrigin = "https://www.netflix.com";
 
+const peerConnectionConfiguration = Object.freeze({
+  iceServers: [
+    {
+      urls: "stun:stun.stunprotocol.org",
+    },
+  ],
+});
+
 const flixLogLevel = Object.freeze({
   INFO: 0,
   WARN: 1,
@@ -15,6 +23,16 @@ const flixLogLevel = Object.freeze({
 const roles = Object.freeze({
   HOST: "host",
   GUEST: "guest",
+});
+
+const peerConnectionStates = Object.freeze({
+  NEW: "new",
+  CHECKING: "checking",
+  CLOSED: "closed",
+  CONNECTED: "connected",
+  DISCONNECTED: "disconnected",
+  FAILED: "failed",
+  UNKNOWN: "unknown",
 });
 
 const dataChannelMessageTypes = Object.freeze({

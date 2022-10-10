@@ -1,4 +1,4 @@
-const maxDelta = 5000;
+const maxDelta = 3000;
 const eventDispatchInterval = 1000;
 
 const receivedEventName = "oninjectormessage";

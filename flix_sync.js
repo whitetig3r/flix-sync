@@ -2,28 +2,21 @@
 var peerConnection;
 // The dataChannel to be used
 var dataChannel;
+// The role of the current user
+var role;
 
 function createPeerConnection(lastIceCandidate) {
-  let peerConnection;
-  const configuration = {
-    iceServers: [
-      {
-        urls: "stun:stun.stunprotocol.org",
-      },
-    ],
-  };
-
   try {
-    peerConnection = new RTCPeerConnection(configuration);
+    const peerConnection = new RTCPeerConnection(peerConnectionConfiguration);
+
+    peerConnection.onicecandidate = handleIceCandidate(lastIceCandidate);
+    peerConnection.onconnectionstatechange = handleConnectionStateChange;
+    peerConnection.oniceconnectionstatechange = handleIceConnectionStateChange;
+
+    return peerConnection;
   } catch (err) {
     flixLog(flixLogLevel.ERROR, "createPeerConnection", err);
   }
-
-  peerConnection.onicecandidate = handleIceCandidate(lastIceCandidate);
-  peerConnection.onconnectionstatechange = handleConnectionStateChange;
-  peerConnection.oniceconnectionstatechange = handleIceConnectionStateChange;
-
-  return peerConnection;
 }
 
 function handleIceCandidate(lastIceCandidate) {
@@ -42,8 +35,8 @@ function handleIceCandidate(lastIceCandidate) {
 
 function handleConnectionStateChange(_event) {
   switch (peerConnection.connectionState) {
-    case "new":
-    case "checking":
+    case peerConnectionStates.NEW:
+    case peerConnectionStates.CHECKING:
       flixLog(
         flixLogLevel.INFO,
         "handleConnectionStateChange",
@@ -51,8 +44,8 @@ function handleConnectionStateChange(_event) {
       );
       break;
 
-    case "closed":
-    case "connected":
+    case peerConnectionStates.CLOSED:
+    case peerConnectionStates.CONNECTED:
       flixLog(
         flixLogLevel.WARN,
         "handleConnectionStateChange",
@@ -60,8 +53,8 @@ function handleConnectionStateChange(_event) {
       );
       break;
 
-    case "disconnected":
-    case "failed":
+    case peerConnectionStates.DISCONNECTED:
+    case peerConnectionStates.FAILED:
       flixLog(
         flixLogLevel.ERROR,
         "handleConnectionStateChange",
@@ -73,7 +66,7 @@ function handleConnectionStateChange(_event) {
       flixLog(
         flixLogLevel.INFO,
         "handleConnectionStateChange",
-        "unknown state"
+        `${peerConnectionStates.UNKNOWN} state`
       );
       break;
   }
@@ -280,7 +273,7 @@ function dispatchPauseEvent(_payload) {
   });
 }
 
-document.addEventListener(receivedEventName, function (e) {
+document.addEventListener(receivedEventName, function (event) {
   if (
     peerConnection &&
     peerConnection.connectionState === "connected" &&
@@ -290,9 +283,9 @@ document.addEventListener(receivedEventName, function (e) {
       return;
     }
 
-    switch (e.detail.type) {
+    switch (event.detail.type) {
       case receivedDocumentEventMessageTypes.CURRENT_TIME:
-        const currentPlayerHead = e.detail.data.currentPlayerTime;
+        const currentPlayerHead = event.detail.data.currentPlayerTime;
         sendOnDataChannel({
           type: dataChannelMessageTypes.SYNC,
           data: { currentPlayerTime: currentPlayerHead },
