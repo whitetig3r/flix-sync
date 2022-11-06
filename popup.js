@@ -1,10 +1,52 @@
+// START: INIT
+
+function retrieveConnectionStatus() {
+  notifyContentTab("getConnectionStatus", null, function (response) {
+    if (response !== universalSuccessCode) {
+      flixLog(
+        flixLogLevel.ERROR,
+        "getConnectionStatus",
+        "No active RTC data channel"
+      );
+    }
+  });
+}
+
+chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
+  switch (message.type) {
+    case popupEvents.SET_GENERATED_OFFER:
+      setGeneratedOffer(message.param);
+      sendResponse(universalSuccessCode);
+      break;
+    case popupEvents.SET_GENERATED_ANSWER:
+      setGeneratedAnswer(message.param);
+      sendResponse(universalSuccessCode);
+      break;
+    case popupEvents.SET_CONNECTION_SUCCESS:
+      setConnectionSuccess();
+      sendResponse(universalSuccessCode);
+      break;
+    case popupEvents.SET_CONNECTION_FAILURE:
+      // no-op for now
+      sendResponse(universalSuccessCode);
+      break;
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  retrieveConnectionStatus();
+  registerHandlers();
+});
+
+// END: INIT
+
 // START: CLICK EVENTS
 
 function clickCreateOffer() {
   document.getElementById("generateOffer").disabled = true;
 
   notifyContentTab("createOffer", null, function (response) {
-    if (!response) {
+    if (response !== universalSuccessCode) {
       flixLog(flixLogLevel.ERROR, "clickCreateOffer", "Failed to createOffer");
     }
   });
@@ -18,7 +60,7 @@ function clickOfferPasted() {
   const offer = JSON.parse(offerPasteZone.value);
 
   notifyContentTab("generateAnswer", offer, function (response) {
-    if (!response) {
+    if (response != universalSuccessCode) {
       flixLog(
         flixLogLevel.ERROR,
         "clickOfferPasted",
@@ -41,7 +83,7 @@ function clickAnswerPasted() {
   const answer = JSON.parse(answerPasteZone.value);
 
   notifyContentTab("establishConnection", answer, function (response) {
-    if (!response) {
+    if (response !== universalSuccessCode) {
       flixLog(
         flixLogLevel.ERROR,
         "clickAnswerPasted",
@@ -126,7 +168,7 @@ function setConnectionSuccess() {
   document.getElementById("mainSection").classList.add("hidden");
 }
 
-async function notifyContentTab(message, param) {
+async function notifyContentTab(message, param, callback) {
   const queryOptions = { active: true, currentWindow: true };
   let [tab] = await chrome.tabs.query(queryOptions);
 
@@ -134,30 +176,10 @@ async function notifyContentTab(message, param) {
     tab.id,
     { type: message, param: param },
     (response) => {
+      callback(response);
       return response === universalSuccessCode;
     }
   );
 }
 
 // END: TAB EVENTS
-
-chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
-  switch (message.type) {
-    case popupEvents.SET_GENERATED_OFFER:
-      setGeneratedOffer(message.param);
-      sendResponse(universalSuccessCode);
-      break;
-    case popupEvents.SET_GENERATED_ANSWER:
-      setGeneratedAnswer(message.param);
-      sendResponse(universalSuccessCode);
-      break;
-    case popupEvents.SET_CONNECTION_CONNECTION_SUCCESS:
-      setConnectionSuccess();
-      sendResponse(universalSuccessCode);
-      break;
-  }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-  registerHandlers();
-});

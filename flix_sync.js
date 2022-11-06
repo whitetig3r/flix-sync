@@ -83,14 +83,26 @@ function handleIceConnectionStateChange(event) {
 function lastIceCandidateHost() {
   const offer = peerConnection.localDescription;
   notifyPopup(popupEvents.SET_GENERATED_OFFER, offer, function (response) {
-    return response === universalSuccessCode;
+    if (response !== universalSuccessCode) {
+      flixLog(
+        flixLogLevel.ERROR,
+        "lastIceCandidateHost",
+        "Failed to setGeneratedOffer"
+      );
+    }
   });
 }
 
 function lastIceCandidateGuest() {
   const answer = peerConnection.localDescription;
   notifyPopup(popupEvents.SET_GENERATED_ANSWER, answer, function (response) {
-    return response === universalSuccessCode;
+    if (response !== universalSuccessCode) {
+      flixLog(
+        flixLogLevel.ERROR,
+        "lastIceCandidateGuest",
+        "Failed to setGeneratedAnswer"
+      );
+    }
   });
 }
 
@@ -102,9 +114,14 @@ function handleDataChannel(event) {
 
 function dataChannelOpen() {
   flixLog(flixLogLevel.INFO, "dataChannelOpen", "Data channel is open");
-
-  notifyPopup("setConnectionSuccess", null, function (response) {
-    return response === universalSuccessCode;
+  notifyPopup(popupEvents.SET_CONNECTION_SUCCESS, null, function (response) {
+    if (response !== universalSuccessCode) {
+      flixLog(
+        flixLogLevel.ERROR,
+        "dataChannelOpen",
+        "Failed to open dataChannel"
+      );
+    }
   });
 }
 
@@ -134,13 +151,43 @@ chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
       establishConnection(message.param);
       sendResponse(universalSuccessCode);
       break;
+    case contentTabEvents.GET_CONNECTION_STATUS: {
+      reportConnectionStatus(sendResponse);
+      break;
+    }
   }
 });
 
-function notifyPopup(message, param) {
+function reportConnectionStatus(sendResponse) {
+  if (peerConnection.connectionState === peerConnectionStates.CONNECTED) {
+    sendResponse(universalSuccessCode);
+    notifyPopup(popupEvents.SET_CONNECTION_SUCCESS, null, function (response) {
+      if (response !== universalSuccessCode) {
+        flixLog(
+          flixLogLevel.ERROR,
+          "getConnectionStatus",
+          "Failed to setConnectionSuccess"
+        );
+      }
+    });
+  }
+  sendResponse(universalFailureCode);
+  notifyPopup(popupEvents.SET_CONNECTION_FAILURE, null, function (response) {
+    if (response !== universalSuccessCode) {
+      flixLog(
+        flixLogLevel.ERROR,
+        "getConnectionStatus",
+        "Failed to setConnectionFailure"
+      );
+    }
+  });
+}
+
+function notifyPopup(message, param, callback) {
   return chrome.runtime.sendMessage(
     { type: message, param: param },
     (response) => {
+      callback(response);
       return response === universalSuccessCode;
     }
   );

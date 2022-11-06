@@ -1,5 +1,6 @@
 const dataChannelId = "syncChannel";
 const universalSuccessCode = "OK";
+const universalFailureCode = "FAIL";
 
 const dispatchedEventName = "oninjectormessage";
 const receivedEventName = "oninjectedmessage";
@@ -44,13 +45,14 @@ const contentTabEvents = Object.freeze({
   CREATE_OFFER: "createOffer",
   GENERATE_ANSWER: "generateAnswer",
   ESTABLISH_CONNECTION: "establishConnection",
+  GET_CONNECTION_STATUS: "getConnectionStatus",
 });
 
 const popupEvents = Object.freeze({
   SET_GENERATED_OFFER: "setGeneratedOffer",
   SET_GENERATED_ANSWER: "setGeneratedAnswer",
-  SET_CONNECTION_CONNECTION_SUCCESS: "setConnectionSuccess",
-  SET_CONNECTION_CONNECTION_FAILURE: "setConnectionFailure",
+  SET_CONNECTION_SUCCESS: "setConnectionSuccess",
+  SET_CONNECTION_FAILURE: "setConnectionFailure",
 });
 
 const receivedDocumentEventMessageTypes = Object.freeze({
