@@ -34,8 +34,8 @@ chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
 });
 
 document.addEventListener("DOMContentLoaded", function () {
-  retrieveConnectionStatus();
   registerHandlers();
+  retrieveConnectionStatus();
 });
 
 // END: INIT

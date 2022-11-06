@@ -159,7 +159,10 @@ chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
 });
 
 function reportConnectionStatus(sendResponse) {
-  if (peerConnection.connectionState === peerConnectionStates.CONNECTED) {
+  if (
+    peerConnection &&
+    peerConnection.connectionState === peerConnectionStates.CONNECTED
+  ) {
     sendResponse(universalSuccessCode);
     notifyPopup(popupEvents.SET_CONNECTION_SUCCESS, null, function (response) {
       if (response !== universalSuccessCode) {
