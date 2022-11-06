@@ -1,45 +1,3 @@
-// START: INIT
-
-function retrieveConnectionStatus() {
-  notifyContentTab("getConnectionStatus", null, function (response) {
-    if (response !== universalSuccessCode) {
-      flixLog(
-        flixLogLevel.ERROR,
-        "getConnectionStatus",
-        "No active RTC data channel"
-      );
-    }
-  });
-}
-
-chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
-  switch (message.type) {
-    case popupEvents.SET_GENERATED_OFFER:
-      setGeneratedOffer(message.param);
-      sendResponse(universalSuccessCode);
-      break;
-    case popupEvents.SET_GENERATED_ANSWER:
-      setGeneratedAnswer(message.param);
-      sendResponse(universalSuccessCode);
-      break;
-    case popupEvents.SET_CONNECTION_SUCCESS:
-      setConnectionSuccess();
-      sendResponse(universalSuccessCode);
-      break;
-    case popupEvents.SET_CONNECTION_FAILURE:
-      // no-op for now
-      sendResponse(universalSuccessCode);
-      break;
-  }
-});
-
-document.addEventListener("DOMContentLoaded", function () {
-  registerHandlers();
-  retrieveConnectionStatus();
-});
-
-// END: INIT
-
 // START: CLICK EVENTS
 
 function clickCreateOffer() {
@@ -183,3 +141,45 @@ async function notifyContentTab(message, param, callback) {
 }
 
 // END: TAB EVENTS
+
+// START: INIT
+
+function retrieveConnectionStatus() {
+  notifyContentTab("getConnectionStatus", null, function (response) {
+    if (response !== universalSuccessCode) {
+      flixLog(
+        flixLogLevel.ERROR,
+        "getConnectionStatus",
+        "No active RTC data channel"
+      );
+    }
+  });
+}
+
+chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
+  switch (message.type) {
+    case popupEvents.SET_GENERATED_OFFER:
+      setGeneratedOffer(message.param);
+      sendResponse(universalSuccessCode);
+      break;
+    case popupEvents.SET_GENERATED_ANSWER:
+      setGeneratedAnswer(message.param);
+      sendResponse(universalSuccessCode);
+      break;
+    case popupEvents.SET_CONNECTION_SUCCESS:
+      setConnectionSuccess();
+      sendResponse(universalSuccessCode);
+      break;
+    case popupEvents.SET_CONNECTION_FAILURE:
+      // no-op for now
+      sendResponse(universalSuccessCode);
+      break;
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  registerHandlers();
+  retrieveConnectionStatus();
+});
+
+// END: INIT
