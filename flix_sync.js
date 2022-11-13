@@ -354,6 +354,4 @@ document.addEventListener(receivedEventName, function (event) {
 
 // END: CORE SYNCING
 
-document.addEventListener("DOMContentLoaded", function () {
-  clearValuesInLocalStorage();
-});
+clearValuesInLocalStorage();
