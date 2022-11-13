@@ -243,6 +243,7 @@ chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
 
 document.addEventListener("DOMContentLoaded", async function () {
   registerHandlers();
+
   if (retrieveConnectionStatus() == universalSuccessCode) {
     return;
   }
