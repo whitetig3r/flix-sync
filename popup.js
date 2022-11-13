@@ -1,10 +1,38 @@
+// START: STATE MANAGEMENT
+
+function getValueFromLocalStorage(key) {
+  return chrome.storage.local.get([key]);
+}
+
+function setValueInLocalStorage(key, value) {
+  chrome.storage.local.set({ [key]: value }, function () {
+    flixLog(
+      flixLogLevel.INFO,
+      "setValueInLocalStorage",
+      "Set value: " + JSON.stringify(value) + " in localStorage for: " + key
+    );
+  });
+}
+
+function clearValuesInLocalStorage() {
+  chrome.storage.local.remove(["role", "offer", "answer"], function () {
+    flixLog(
+      flixLogLevel.INFO,
+      "clearValuesInLocalStorage",
+      "Cleared local storage"
+    );
+  });
+}
+
+// END: STATE MANAGEMENT
+
 // START: CLICK EVENTS
 
 function clickCreateOffer() {
   document.getElementById("generateOffer").disabled = true;
 
   notifyContentTab("createOffer", null, function (response) {
-    if (response !== universalSuccessCode) {
+    if (response != universalSuccessCode) {
       flixLog(flixLogLevel.ERROR, "clickCreateOffer", "Failed to createOffer");
     }
   });
@@ -12,10 +40,12 @@ function clickCreateOffer() {
 
 function clickOfferPasted() {
   flixLog(flixLogLevel.INFO, "clickOfferPasted", "Offer pasted in paste zone");
+
   const offerPasteZone = document.getElementById("offerPasteZone");
 
   offerPasteZone.readOnly = true;
   const offer = JSON.parse(offerPasteZone.value);
+  setValueInLocalStorage("offer", offer);
 
   notifyContentTab("generateAnswer", offer, function (response) {
     if (response != universalSuccessCode) {
@@ -41,7 +71,7 @@ function clickAnswerPasted() {
   const answer = JSON.parse(answerPasteZone.value);
 
   notifyContentTab("establishConnection", answer, function (response) {
-    if (response !== universalSuccessCode) {
+    if (response != universalSuccessCode) {
       flixLog(
         flixLogLevel.ERROR,
         "clickAnswerPasted",
@@ -52,6 +82,8 @@ function clickAnswerPasted() {
 }
 
 function clickSubmitRole(role) {
+  setValueInLocalStorage("role", role);
+
   const chooserSection = document.getElementById("chooser");
 
   chooserSection.classList.remove("chooser");
@@ -73,7 +105,11 @@ function clickCopyToClipBoard(elementId) {
 
   navigator.clipboard.writeText(generatedElement.innerHTML).then(
     function () {
+      const previousInnerContent = generatedElement.innerHTML;
       generatedElement.innerHTML = "Copying to clipboard was successful!";
+      setTimeout(() => {
+        generatedElement.innerHTML = previousInnerContent;
+      }, 3000);
     },
     function (err) {
       flixLog(
@@ -110,16 +146,19 @@ function bindClickEvent(elementId, eventHandler) {
 // START: TAB EVENTS
 
 function setGeneratedOffer(offer) {
+  setValueInLocalStorage("offer", offer);
   const generatedOfferElement = document.getElementById("generatedOffer");
   generatedOfferElement.innerHTML = JSON.stringify(offer);
 }
 
 function setGeneratedAnswer(answer) {
   const generatedAnswerElement = document.getElementById("generatedAnswer");
+  setValueInLocalStorage("answer", answer);
   generatedAnswerElement.innerHTML = JSON.stringify(answer);
 }
 
 function setConnectionSuccess() {
+  clearValuesInLocalStorage();
   const successBanner = document.getElementById("successBanner");
   successBanner.classList.remove("hidden");
   successBanner.classList.add("viewable");
@@ -142,6 +181,14 @@ async function notifyContentTab(message, param, callback) {
 
 // END: TAB EVENTS
 
+// START: UTILS
+
+function isValid(obj) {
+  return obj && (typeof obj != "object" || Object.keys(obj).length > 0);
+}
+
+// END: UTILS
+
 // START: INIT
 
 function retrieveConnectionStatus() {
@@ -153,20 +200,22 @@ function retrieveConnectionStatus() {
           "getConnectionStatus",
           "No active RTC data channel; a new one needs to be setup"
         );
-        break;
+        return universalNoConnectionCode;
       case universalFailureCode:
         flixLog(
           flixLogLevel.ERROR,
           "getConnectionStatus",
           "RTC data channel connection status undetermined; failure reported from content script"
         );
-        break;
+        return universalFailureCode;
       case universalSuccessCode:
+        setConnectionSuccess();
         flixLog(
           flixLogLevel.INFO,
           "getConnectionStatus",
           "Active RTC Data channel retrieved"
         );
+        return universalSuccessCode;
     }
   });
 }
@@ -192,9 +241,43 @@ chrome.runtime.onMessage.addListener(function (message, _sender, sendResponse) {
   }
 });
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
   registerHandlers();
-  retrieveConnectionStatus();
+  if (retrieveConnectionStatus() == universalSuccessCode) {
+    return;
+  }
+
+  const existingRoleObject = await getValueFromLocalStorage("role");
+  const existingOfferObject = await getValueFromLocalStorage("offer");
+  const existingAnswerObject = await getValueFromLocalStorage("answer");
+
+  if (
+    !(
+      isValid(existingRoleObject) &&
+      ["host", "guest"].includes(existingRoleObject["role"])
+    )
+  ) {
+    return;
+  }
+  clickSubmitRole(existingRoleObject["role"]);
+
+  if (
+    isValid(existingOfferObject) &&
+    existingOfferObject["offer"] &&
+    existingRoleObject["role"] == "host"
+  ) {
+    document.getElementById("generateOffer").disabled = true;
+    setGeneratedOffer(existingOfferObject["offer"]);
+  }
+
+  if (
+    isValid(existingAnswerObject) &&
+    existingAnswerObject["answer"] &&
+    existingRoleObject["role"] == "guest"
+  ) {
+    document.getElementById("generateAnswer").disabled = true;
+    setGeneratedAnswer(existingAnswerObject["answer"]);
+  }
 });
 
 // END: INIT
