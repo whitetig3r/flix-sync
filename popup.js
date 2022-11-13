@@ -32,7 +32,7 @@ function clickCreateOffer() {
   document.getElementById("generateOffer").disabled = true;
 
   notifyContentTab("createOffer", null, function (response) {
-    if (response != universalSuccessCode) {
+    if (response !== universalSuccessCode) {
       flixLog(flixLogLevel.ERROR, "clickCreateOffer", "Failed to createOffer");
     }
   });
@@ -48,7 +48,7 @@ function clickOfferPasted() {
   setValueInLocalStorage("offer", offer);
 
   notifyContentTab("generateAnswer", offer, function (response) {
-    if (response != universalSuccessCode) {
+    if (response !== universalSuccessCode) {
       flixLog(
         flixLogLevel.ERROR,
         "clickOfferPasted",
@@ -71,7 +71,7 @@ function clickAnswerPasted() {
   const answer = JSON.parse(answerPasteZone.value);
 
   notifyContentTab("establishConnection", answer, function (response) {
-    if (response != universalSuccessCode) {
+    if (response !== universalSuccessCode) {
       flixLog(
         flixLogLevel.ERROR,
         "clickAnswerPasted",
@@ -184,7 +184,7 @@ async function notifyContentTab(message, param, callback) {
 // START: UTILS
 
 function isValid(obj) {
-  return obj && (typeof obj != "object" || Object.keys(obj).length > 0);
+  return obj && (typeof obj !== "object" || Object.keys(obj).length > 0);
 }
 
 // END: UTILS

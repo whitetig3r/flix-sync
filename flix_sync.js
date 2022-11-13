@@ -21,7 +21,7 @@ function createPeerConnection(lastIceCandidate) {
 
 function handleIceCandidate(lastIceCandidate) {
   return function (event) {
-    if (event.candidate != null) {
+    if (event.candidate !== null) {
       flixLog(
         flixLogLevel.INFO,
         "handleIceCandidate",
@@ -83,7 +83,7 @@ function handleIceConnectionStateChange(event) {
 function lastIceCandidateHost() {
   const offer = peerConnection.localDescription;
   notifyPopup(popupEvents.SET_GENERATED_OFFER, offer, function (response) {
-    if (response != universalSuccessCode) {
+    if (response !== universalSuccessCode) {
       flixLog(
         flixLogLevel.ERROR,
         "lastIceCandidateHost",
@@ -96,7 +96,7 @@ function lastIceCandidateHost() {
 function lastIceCandidateGuest() {
   const answer = peerConnection.localDescription;
   notifyPopup(popupEvents.SET_GENERATED_ANSWER, answer, function (response) {
-    if (response != universalSuccessCode) {
+    if (response !== universalSuccessCode) {
       flixLog(
         flixLogLevel.ERROR,
         "lastIceCandidateGuest",
@@ -115,7 +115,7 @@ function handleDataChannel(event) {
 function dataChannelOpen() {
   flixLog(flixLogLevel.INFO, "dataChannelOpen", "Data channel is open");
   notifyPopup(popupEvents.SET_CONNECTION_SUCCESS, null, function (response) {
-    if (response != universalSuccessCode) {
+    if (response !== universalSuccessCode) {
       flixLog(
         flixLogLevel.ERROR,
         "dataChannelOpen",
@@ -165,7 +165,7 @@ function reportConnectionStatus(sendResponse) {
   ) {
     sendResponse(universalSuccessCode);
     notifyPopup(popupEvents.SET_CONNECTION_SUCCESS, null, function (response) {
-      if (response != universalSuccessCode) {
+      if (response !== universalSuccessCode) {
         flixLog(
           flixLogLevel.ERROR,
           "getConnectionStatus",
@@ -177,7 +177,7 @@ function reportConnectionStatus(sendResponse) {
 
   sendResponse(universalNoConnectionCode);
   notifyPopup(popupEvents.SET_CONNECTION_FAILURE, null, function (response) {
-    if (response != universalSuccessCode) {
+    if (response !== universalSuccessCode) {
       flixLog(
         flixLogLevel.ERROR,
         "getConnectionStatus",
@@ -330,7 +330,7 @@ document.addEventListener(receivedEventName, function (event) {
     peerConnection.connectionState === peerConnectionStates.CONNECTED &&
     dataChannel
   ) {
-    if (role != roles.HOST) {
+    if (role !== roles.HOST) {
       return;
     }
 
