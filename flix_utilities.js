@@ -1,5 +1,6 @@
 const dataChannelId = "syncChannel";
 const universalSuccessCode = "OK";
+const universalNoConnectionCode = "NO_CONN";
 const universalFailureCode = "FAIL";
 
 const dispatchedEventName = "oninjectormessage";

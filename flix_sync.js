@@ -174,7 +174,8 @@ function reportConnectionStatus(sendResponse) {
       }
     });
   }
-  sendResponse(universalFailureCode);
+
+  sendResponse(universalNoConnectionCode);
   notifyPopup(popupEvents.SET_CONNECTION_FAILURE, null, function (response) {
     if (response !== universalSuccessCode) {
       flixLog(

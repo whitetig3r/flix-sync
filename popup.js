@@ -146,12 +146,27 @@ async function notifyContentTab(message, param, callback) {
 
 function retrieveConnectionStatus() {
   notifyContentTab("getConnectionStatus", null, function (response) {
-    if (response !== universalSuccessCode) {
-      flixLog(
-        flixLogLevel.ERROR,
-        "getConnectionStatus",
-        "No active RTC data channel"
-      );
+    switch (response) {
+      case universalNoConnectionCode:
+        flixLog(
+          flixLogLevel.INFO,
+          "getConnectionStatus",
+          "No active RTC data channel; a new one needs to be setup"
+        );
+        break;
+      case universalFailureCode:
+        flixLog(
+          flixLogLevel.ERROR,
+          "getConnectionStatus",
+          "RTC data channel connection status undetermined; failure reported from content script"
+        );
+        break;
+      case universalSuccessCode:
+        flixLog(
+          flixLogLevel.INFO,
+          "getConnectionStatus",
+          "Active RTC Data channel retrieved"
+        );
     }
   });
 }
