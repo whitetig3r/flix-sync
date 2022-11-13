@@ -275,7 +275,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     existingAnswerObject["answer"] &&
     existingRoleObject["role"] == "guest"
   ) {
-    document.getElementById("generateAnswer").disabled = true;
+    document.getElementById("generatedAnswer").disabled = true;
     setGeneratedAnswer(existingAnswerObject["answer"]);
   }
 });
