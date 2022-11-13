@@ -82,3 +82,13 @@ function flixLog(level, tag, message) {
       console.log(formattedLog);
   }
 }
+
+function clearValuesInLocalStorage() {
+  chrome.storage.local.remove(["role", "offer", "answer"], function () {
+    flixLog(
+      flixLogLevel.INFO,
+      "clearValuesInLocalStorage",
+      "Cleared local storage"
+    );
+  });
+}
