@@ -19,6 +19,10 @@ function createPeerConnection(lastIceCandidate) {
   }
 }
 
+function closePeerConnection() {
+  peerConnection.close();
+}
+
 function clearGlobalVariables() {
   peerConnection = null;
   dataChannel = null;
@@ -51,6 +55,7 @@ function handleConnectionStateChange(_event) {
       break;
 
     case peerConnectionStates.CLOSED:
+      clearGlobalVariables();
     case peerConnectionStates.CONNECTED:
       flixLog(
         flixLogLevel.WARN,
@@ -66,13 +71,15 @@ function handleConnectionStateChange(_event) {
         "handleConnectionStateChange",
         peerConnection.state
       );
+      closePeerConnection();
+      clearGlobalVariables();
       break;
 
     default:
       flixLog(
         flixLogLevel.INFO,
         "handleConnectionStateChange",
-        `${peerConnectionStates.UNKNOWN} state`
+        `${peerConnectionStates.UNKNOWN} state: ${peerConnection.connectionState}`
       );
       break;
   }
