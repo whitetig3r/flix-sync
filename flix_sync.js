@@ -19,6 +19,12 @@ function createPeerConnection(lastIceCandidate) {
   }
 }
 
+function clearGlobalVariables() {
+  peerConnection = null;
+  dataChannel = null;
+  role = null;
+}
+
 function handleIceCandidate(lastIceCandidate) {
   return function (event) {
     if (event.candidate !== null) {
@@ -354,4 +360,5 @@ document.addEventListener(receivedEventName, function (event) {
 
 // END: CORE SYNCING
 
+clearGlobalVariables();
 clearValuesInLocalStorage();
