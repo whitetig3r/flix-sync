@@ -56,6 +56,7 @@ function handleConnectionStateChange(_event) {
 
     case peerConnectionStates.CLOSED:
       clearGlobalVariables();
+      clearValuesInLocalStorage();
     case peerConnectionStates.CONNECTED:
       flixLog(
         flixLogLevel.WARN,
@@ -73,6 +74,7 @@ function handleConnectionStateChange(_event) {
       );
       closePeerConnection();
       clearGlobalVariables();
+      clearValuesInLocalStorage();
       break;
 
     default:
